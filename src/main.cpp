@@ -55,10 +55,12 @@ void runAdmin(
         switch (choice)
         {
             case 1:
-                admin.manageStaff(
-                    loginManager, doctorManager, nurseManager
-                );
-                break;
+               admin.manageStaff(
+               loginManager,
+              doctorManager,
+              nurseManager,
+              departmentManager
+);
 
             case 2:
                 admin.manageDepartments(departmentManager);

@@ -27,7 +27,9 @@ void Admin::displayStaffMenu() const
     cout << "1. View Staff Accounts\n";
     cout << "2. View All Doctors\n";
     cout << "3. View All Nurses\n";
-    cout << "4. Back\n";
+    cout << "4. Register Doctor\n";
+    cout << "5. Register Nurse\n";
+    cout << "6. Back\n";
     cout << "======================================\n";
 }
 
@@ -80,11 +82,195 @@ void Admin::displayAuditMenu() const
     cout << "===============================\n";
 }
 
+// Register Doctor
+void Admin::registerDoctor(
+    Login& loginManager,
+    DoctorManager& doctorManager,
+    DepartmentManager& departmentManager
+)
+{
+    Doctor doctor;
+
+    string password;
+
+    cout << "\n========== DOCTOR REGISTRATION ==========\n";
+
+    cout << "Enter Doctor Name: ";
+    getline(cin >> ws, doctor.name);
+
+    cout << "Enter Username: ";
+    getline(cin, doctor.username);
+
+    cout << "Enter Password: ";
+    getline(cin, password);
+
+    cout << "\nAvailable Departments:\n";
+    departmentManager.displayDepartments();
+
+    cout << "\nEnter Department Name: ";
+    getline(cin, doctor.department);
+
+    if (!departmentManager.departmentExists(doctor.department))
+    {
+        cout << "\nInvalid department.\n";
+        return;
+    }
+
+    cout << "Enter Specialization: ";
+    getline(cin, doctor.specialization);
+
+    cout << "Enter Phone Number: ";
+    getline(cin, doctor.phone);
+
+    cout << "Enter Availability: ";
+    getline(cin, doctor.availability);
+
+    // Register doctor in DoctorManager
+    if (!doctorManager.registerDoctor(doctor))
+    {
+        cout << "\nDoctor registration failed.\n";
+        return;
+    }
+
+    // Find the newly registered doctor
+    Doctor* savedDoctor = doctorManager.searchByName(doctor.name);
+
+    if (savedDoctor == NULL)
+    {
+        cout << "\nDoctor registered, but doctor ID could not be retrieved.\n";
+        return;
+    }
+
+    // Create corresponding login account
+    Account account(
+        savedDoctor->doctorID,
+        savedDoctor->name,
+        savedDoctor->username,
+        password,
+        "Doctor",
+        savedDoctor->department
+    );
+
+    if (!loginManager.createAccount(account))
+    {
+        cout << "\nDoctor record was saved, but login account creation failed.\n";
+        cout << "Please contact the administrator to resolve this.\n";
+        return;
+    }
+
+    cout << "\nDoctor registered successfully!\n";
+    cout << "Doctor ID: " << savedDoctor->doctorID << '\n';
+    cout << "Username: " << savedDoctor->username << '\n';
+}
+
+// Register Nurse
+void Admin::registerNurse(
+    Login& loginManager,
+    NurseManager& nurseManager,
+    DoctorManager& doctorManager,
+    DepartmentManager& departmentManager
+)
+{
+    Nurse nurse;
+
+    string password;
+    string assignedDoctorID;
+
+    cout << "\n========== NURSE REGISTRATION ==========\n";
+
+    cout << "Enter Nurse Name: ";
+    getline(cin >> ws, nurse.name);
+
+    cout << "Enter Username: ";
+    getline(cin, nurse.username);
+
+    cout << "Enter Password: ";
+    getline(cin, password);
+
+    cout << "\nAvailable Departments:\n";
+    departmentManager.displayDepartments();
+
+    cout << "\nEnter Department Name: ";
+    getline(cin, nurse.department);
+
+    if (!departmentManager.departmentExists(nurse.department))
+    {
+        cout << "\nInvalid department.\n";
+        return;
+    }
+
+    cout << "\nEnter Assigned Doctor ID: ";
+    getline(cin, assignedDoctorID);
+
+    Doctor* assignedDoctor =
+        doctorManager.searchByID(assignedDoctorID);
+
+    if (assignedDoctor == NULL)
+    {
+        cout << "\nDoctor ID not found. Register the doctor first.\n";
+        return;
+    }
+
+    if (assignedDoctor->department != nurse.department)
+    {
+        cout << "\nThe nurse and assigned doctor must belong to the same department.\n";
+        return;
+    }
+
+    nurse.assignedDoctorID = assignedDoctor->doctorID;
+    nurse.assignedDoctorName = assignedDoctor->name;
+
+    cout << "Enter Phone Number: ";
+    getline(cin, nurse.phone);
+
+    cout << "Enter Availability: ";
+    getline(cin, nurse.availability);
+
+    // Register nurse in NurseManager
+    if (!nurseManager.registerNurse(nurse))
+    {
+        cout << "\nNurse registration failed.\n";
+        return;
+    }
+
+    // Find the newly registered nurse
+    Nurse* savedNurse = nurseManager.searchByName(nurse.name);
+
+    if (savedNurse == NULL)
+    {
+        cout << "\nNurse registered, but nurse ID could not be retrieved.\n";
+        return;
+    }
+
+    // Create corresponding login account
+    Account account(
+        savedNurse->nurseID,
+        savedNurse->name,
+        savedNurse->username,
+        password,
+        "Nurse",
+        savedNurse->department
+    );
+
+    if (!loginManager.createAccount(account))
+    {
+        cout << "\nNurse record was saved, but login account creation failed.\n";
+        cout << "Please contact the administrator to resolve this.\n";
+        return;
+    }
+
+    cout << "\nNurse registered successfully!\n";
+    cout << "Nurse ID: " << savedNurse->nurseID << '\n';
+    cout << "Assigned Doctor: " << savedNurse->assignedDoctorName << '\n';
+    cout << "Username: " << savedNurse->username << '\n';
+}
+
 // Manage Staff
 void Admin::manageStaff(
     Login& loginManager,
     DoctorManager& doctorManager,
-    NurseManager& nurseManager
+    NurseManager& nurseManager,
+    DepartmentManager& departmentManager
 )
 {
     int choice;
@@ -111,6 +297,23 @@ void Admin::manageStaff(
                 break;
 
             case 4:
+                registerDoctor(
+                    loginManager,
+                    doctorManager,
+                    departmentManager
+                );
+                break;
+
+            case 5:
+                registerNurse(
+                    loginManager,
+                    nurseManager,
+                    doctorManager,
+                    departmentManager
+                );
+                break;
+
+            case 6:
                 cout << "\nReturning to Admin Dashboard.\n";
                 break;
 
@@ -118,7 +321,7 @@ void Admin::manageStaff(
                 cout << "\nInvalid choice. Try again.\n";
         }
 
-    } while (choice != 4);
+    } while (choice != 6);
 }
 
 // Manage Departments
@@ -153,9 +356,7 @@ void Admin::manageDepartments(
 }
 
 // Manage Resources
-void Admin::manageResources(
-    ResourceManager& resourceManager
-)
+void Admin::manageResources(ResourceManager& resourceManager)
 {
     int choice;
 
@@ -173,8 +374,7 @@ void Admin::manageResources(
                 Resource resource;
 
                 cout << "\nEnter Resource Name: ";
-                cin.ignore();
-                getline(cin, resource.resourceName);
+                getline(cin >> ws, resource.resourceName);
 
                 cout << "Enter Category: ";
                 getline(cin, resource.category);
@@ -183,8 +383,7 @@ void Admin::manageResources(
                 cin >> resource.totalQuantity;
 
                 cout << "Enter Location: ";
-                cin.ignore();
-                getline(cin, resource.location);
+                getline(cin >> ws, resource.location);
 
                 resource.availableQuantity = resource.totalQuantity;
                 resource.status = "Available";
@@ -235,8 +434,7 @@ void Admin::manageBeds(BedManager& bedManager)
                 Bed bed;
 
                 cout << "\nEnter Room ID: ";
-                cin.ignore();
-                getline(cin, bed.roomID);
+                getline(cin >> ws, bed.roomID);
 
                 cout << "Enter Department: ";
                 getline(cin, bed.department);

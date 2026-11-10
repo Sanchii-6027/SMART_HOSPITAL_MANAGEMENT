@@ -1,0 +1,2 @@
+DOC00001|Dr. Rahul Sharma|rahul01|Cardiology|Cardiologist|9876543210|available
+DOC00002|Dr. Arjun Mehta |arjun01|Neurology|Neurologist|9876543213|Available

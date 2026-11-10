@@ -1,1 +1,4 @@
 ADMIN001|Hospital admin|admin|admin123|Admin|Administration
+DOC00001|Dr. Rahul Sharma|rahul01|Rahul@123|Doctor|Cardiology
+NUR00001|Priya Sharma|priya@123|priya01|Nurse|Cardiology
+DOC00002|Dr. Arjun Mehta |arjun01|Arjun@123|Doctor|Neurology

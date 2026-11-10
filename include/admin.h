@@ -19,7 +19,6 @@ using namespace std;
 class Admin
 {
 private:
-    // Display individual management menus
     void displayStaffMenu() const;
     void displayDepartmentMenu() const;
     void displayResourceMenu() const;
@@ -27,38 +26,42 @@ private:
     void displayPatientMenu() const;
     void displayAuditMenu() const;
 
+    void registerDoctor(
+        Login& loginManager,
+        DoctorManager& doctorManager,
+        DepartmentManager& departmentManager
+    );
+
+    void registerNurse(
+        Login& loginManager,
+        NurseManager& nurseManager,
+        DoctorManager& doctorManager,
+        DepartmentManager& departmentManager
+    );
+
 public:
     Admin();
 
-    // Main Admin dashboard
     void displayDashboard() const;
 
-    // Admin management operations
     void manageStaff(
         Login& loginManager,
         DoctorManager& doctorManager,
-        NurseManager& nurseManager
+        NurseManager& nurseManager,
+        DepartmentManager& departmentManager
     );
 
     void manageDepartments(
         DepartmentManager& departmentManager
     ) const;
 
-    void manageResources(
-        ResourceManager& resourceManager
-    );
+    void manageResources(ResourceManager& resourceManager);
 
-    void manageBeds(
-        BedManager& bedManager
-    );
+    void manageBeds(BedManager& bedManager);
 
-    void managePatients(
-        PatientManager& patientManager
-    ) const;
+    void managePatients(PatientManager& patientManager) const;
 
-    void manageAuditLogs(
-        AuditLogManager& auditManager
-    ) const;
+    void manageAuditLogs(AuditLogManager& auditManager) const;
 };
 
 #endif
