@@ -1,4 +1,3 @@
-
 #include "../include/receptionist.h"
 
 // Constructor
@@ -52,9 +51,10 @@ void Receptionist::displayEmergencyMenu() const
     cout << "=====================================\n";
 }
 
-// Register New Patient
+// Register New Patient and Assign Doctor
 void Receptionist::registerNewPatient(
-    PatientManager& patientManager
+    PatientManager& patientManager,
+    DoctorManager& doctorManager
 )
 {
     Patient patient;
@@ -106,6 +106,7 @@ void Receptionist::registerNewPatient(
     cout << "Initial Symptoms: ";
     getline(cin, patient.initialSymptoms);
 
+    // Initialize patient status
     patient.status = "Registered";
     patient.isEmergency = false;
     patient.emergencyID = "";
@@ -121,10 +122,73 @@ void Receptionist::registerNewPatient(
     patient.doctorID = "";
     patient.doctorName = "";
 
+    // Display registered doctors
+    cout << "\n========== AVAILABLE DOCTORS ==========\n";
+    doctorManager.displayAllDoctors();
+
+    string selectedDoctorID;
+
+    cout << "\nEnter Doctor ID to assign: ";
+    getline(cin, selectedDoctorID);
+
+    Doctor* selectedDoctor =
+        doctorManager.searchByID(selectedDoctorID);
+
+    if (selectedDoctor == NULL)
+    {
+        cout << "\nInvalid Doctor ID. Patient was not registered.\n";
+        return;
+    }
+
+    int activeCount =
+        patientManager.countActivePatientsForDoctor(selectedDoctorID);
+
+    string effectiveStatus =
+        doctorManager.getEffectiveAvailability(
+            selectedDoctorID,
+            activeCount
+        );
+
+    cout << "\nDoctor: " << selectedDoctor->name;
+    cout << "\nActive Patients: " << activeCount << "/"
+         << MAX_PATIENTS_PER_DOCTOR;
+    cout << "\nAvailability: " << effectiveStatus << '\n';
+
+    if (!doctorManager.canAcceptPatient(
+            selectedDoctorID, activeCount))
+    {
+        cout << "\nThis doctor cannot accept another patient.\n";
+        cout << "Please select another available doctor.\n";
+        return;
+    }
+
+    // Assign doctor to patient
+    patient.doctorID = selectedDoctor->doctorID;
+    patient.doctorName = selectedDoctor->name;
+    patient.department = selectedDoctor->department;
+
+    // Register patient
     if (patientManager.registerPatient(patient))
     {
         cout << "\nPatient registered successfully!\n";
-        cout << "Generated Patient ID: " << patient.patientID << endl;
+        cout << "Generated Patient ID: "
+             << patient.patientID << '\n';
+
+        cout << "Assigned Doctor: "
+             << patient.doctorName << '\n';
+
+        cout << "Department: "
+             << patient.department << '\n';
+
+        cout << "Doctor Capacity: "
+             << activeCount + 1 << "/"
+             << MAX_PATIENTS_PER_DOCTOR << '\n';
+
+        if (activeCount + 1 == MAX_PATIENTS_PER_DOCTOR)
+        {
+            cout << "\nDoctor has reached maximum patient capacity.\n";
+            cout << "Effective Availability: Unavailable\n";
+        }
     }
     else
     {
@@ -150,7 +214,6 @@ void Receptionist::searchPatient(
     cin.ignore(10000, '\n');
 
     Patient* patient = NULL;
-
     string searchValue;
 
     switch (choice)
@@ -195,7 +258,6 @@ void Receptionist::viewAllPatients(
 ) const
 {
     cout << "\n========== ALL REGISTERED PATIENTS ==========\n";
-
     patientManager.displayAllPatients();
 }
 
@@ -333,6 +395,5 @@ void Receptionist::viewAvailableBeds(
 ) const
 {
     cout << "\n========== AVAILABLE BEDS ==========\n";
-
     bedManager.displayAvailableBeds();
 }

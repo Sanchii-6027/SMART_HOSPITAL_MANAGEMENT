@@ -1,4 +1,3 @@
-
 #ifndef NURSE_PORTAL_H
 #define NURSE_PORTAL_H
 
@@ -18,13 +17,14 @@ private:
     string loggedInNurseID;
     string assignedDoctorID;
 
-    // Check whether a patient belongs to this nurse's assigned doctor
+    // Check whether a patient belongs to this nurse's doctor
     bool hasPatientAccess(const Patient* patient) const;
 
 public:
+
     NursePortal();
 
-    // Nurse login and logout
+    // Login and logout
     bool login(
         const string& nurseID,
         NurseManager& nurseManager
@@ -34,54 +34,58 @@ public:
 
     bool isLoggedIn() const;
 
-    // Nurse dashboard
+    // Dashboard
     void displayDashboard() const;
 
-    // View assigned patients
+    // Patient management
     void viewAssignedPatients(
         PatientManager& patientManager
     ) const;
 
-    // View patient profile and medical history
     void viewPatientDetails(
         PatientManager& patientManager,
         const string& patientID
     ) const;
 
-    // Record patient vital signs
+    // Vital signs
     void recordVitals(
         PatientManager& patientManager,
         const string& patientID
     ) const;
 
-    // View patient medical instructions
+    // Medical instructions
     void viewMedicalInstructions(
         PatientManager& patientManager,
         const string& patientID
     ) const;
 
-    // Assign bed to patient
+    // Bed management
     void assignPatientBed(
         PatientManager& patientManager,
         BedManager& bedManager,
         const string& patientID
     ) const;
 
-    // Release bed after discharge
     void releasePatientBed(
         PatientManager& patientManager,
         BedManager& bedManager,
         const string& patientID
     ) const;
 
-    // Assign equipment to patient
+    // Discharge admitted and outpatient patients
+    void dischargePatient(
+        PatientManager& patientManager,
+        BedManager& bedManager,
+        const string& patientID
+    ) const;
+
+    // Equipment management
     void assignEquipment(
         PatientManager& patientManager,
         ResourceManager& resourceManager,
         const string& patientID
     ) const;
 
-    // Return equipment
     void returnEquipment(
         ResourceManager& resourceManager,
         const string& assignmentID

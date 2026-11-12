@@ -1,4 +1,3 @@
-
 #ifndef RECEPTIONIST_H
 #define RECEPTIONIST_H
 
@@ -16,7 +15,6 @@ using namespace std;
 class Receptionist
 {
 private:
-    // Display receptionist menu sections
     void displayPatientMenu() const;
     void displayAppointmentMenu() const;
     void displayEmergencyMenu() const;
@@ -24,12 +22,12 @@ private:
 public:
     Receptionist();
 
-    // Main receptionist dashboard
     void displayDashboard() const;
 
-    // Patient registration and management
+    // Patient registration now receives DoctorManager too
     void registerNewPatient(
-        PatientManager& patientManager
+        PatientManager& patientManager,
+        DoctorManager& doctorManager
     );
 
     void searchPatient(
@@ -53,16 +51,15 @@ public:
         AppointmentManager& appointmentManager
     ) const;
 
-    // Emergency patient routing
+    // Emergency management
     void viewEmergencyCases(
         EmergencyManager& emergencyManager
     ) const;
 
-    // View available beds
+    // Bed management
     void viewAvailableBeds(
         BedManager& bedManager
     ) const;
-
 };
 
 #endif

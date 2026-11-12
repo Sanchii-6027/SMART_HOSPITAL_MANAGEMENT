@@ -7,7 +7,7 @@ using namespace std;
 
 const char DOCTOR_SEPARATOR = '|';
 
-// Check whether a field contains the file separator
+// Check invalid characters
 bool hasInvalidCharacter(const string& value)
 {
     return value.find(DOCTOR_SEPARATOR) != string::npos ||
@@ -15,7 +15,7 @@ bool hasInvalidCharacter(const string& value)
            value.find('\r') != string::npos;
 }
 
-// Split a line into fields
+// Split file fields
 int splitDoctorFields(const string& line, string fields[], int maxFields)
 {
     int count = 0;
@@ -54,10 +54,7 @@ bool readDoctorNumber(const string& value, int& number)
     return !ss.fail() && ss.eof();
 }
 
-// --------------------------------------------------
 // Doctor constructor
-// --------------------------------------------------
-
 Doctor::Doctor()
 {
     doctorID = "";
@@ -71,10 +68,7 @@ Doctor::Doctor()
     next = NULL;
 }
 
-// --------------------------------------------------
 // DoctorManager constructor
-// --------------------------------------------------
-
 DoctorManager::DoctorManager()
 {
     head = NULL;
@@ -85,20 +79,14 @@ DoctorManager::DoctorManager()
     loadDoctors();
 }
 
-// --------------------------------------------------
-// DoctorManager destructor
-// --------------------------------------------------
-
+// Destructor
 DoctorManager::~DoctorManager()
 {
     saveDoctors();
     clearDoctors();
 }
 
-// --------------------------------------------------
-// Append doctor to linked list
-// --------------------------------------------------
-
+// Append doctor
 void DoctorManager::appendDoctor(Doctor* doctor)
 {
     if (doctor == NULL)
@@ -107,9 +95,7 @@ void DoctorManager::appendDoctor(Doctor* doctor)
     doctor->next = NULL;
 
     if (head == NULL)
-    {
         head = tail = doctor;
-    }
     else
     {
         tail->next = doctor;
@@ -119,10 +105,7 @@ void DoctorManager::appendDoctor(Doctor* doctor)
     doctorCount++;
 }
 
-// --------------------------------------------------
-// Clear linked list
-// --------------------------------------------------
-
+// Clear doctors
 void DoctorManager::clearDoctors()
 {
     Doctor* current = head;
@@ -130,7 +113,6 @@ void DoctorManager::clearDoctors()
     while (current != NULL)
     {
         Doctor* nextDoctor = current->next;
-
         delete current;
         current = nextDoctor;
     }
@@ -140,10 +122,7 @@ void DoctorManager::clearDoctors()
     doctorCount = 0;
 }
 
-// --------------------------------------------------
-// Generate unique doctor ID
-// --------------------------------------------------
-
+// Generate Doctor ID
 string DoctorManager::generateDoctorID()
 {
     string number = to_string(nextDoctorNumber++);
@@ -154,10 +133,7 @@ string DoctorManager::generateDoctorID()
     return "DOC" + number;
 }
 
-// --------------------------------------------------
-// Register a new doctor
-// --------------------------------------------------
-
+// Register doctor
 bool DoctorManager::registerDoctor(const Doctor& doctor)
 {
     if (doctor.name.empty() ||
@@ -231,10 +207,7 @@ bool DoctorManager::registerDoctor(const Doctor& doctor)
     return true;
 }
 
-// --------------------------------------------------
 // Search doctor by ID
-// --------------------------------------------------
-
 Doctor* DoctorManager::searchByID(const string& doctorID) const
 {
     Doctor* current = head;
@@ -250,10 +223,7 @@ Doctor* DoctorManager::searchByID(const string& doctorID) const
     return NULL;
 }
 
-// --------------------------------------------------
 // Search doctor by name
-// --------------------------------------------------
-
 Doctor* DoctorManager::searchByName(const string& name) const
 {
     Doctor* current = head;
@@ -269,10 +239,7 @@ Doctor* DoctorManager::searchByName(const string& name) const
     return NULL;
 }
 
-// --------------------------------------------------
 // Display one doctor
-// --------------------------------------------------
-
 void DoctorManager::displayDoctor(const string& doctorID) const
 {
     Doctor* doctor = searchByID(doctorID);
@@ -284,20 +251,16 @@ void DoctorManager::displayDoctor(const string& doctorID) const
     }
 
     cout << "\n========== DOCTOR DETAILS ==========\n";
-
     cout << "Doctor ID: " << doctor->doctorID << '\n';
     cout << "Name: " << doctor->name << '\n';
     cout << "Username: " << doctor->username << '\n';
     cout << "Department: " << doctor->department << '\n';
     cout << "Specialization: " << doctor->specialization << '\n';
     cout << "Phone: " << doctor->phone << '\n';
-    cout << "Availability: " << doctor->availability << '\n';
+    cout << "Manual Availability: " << doctor->availability << '\n';
 }
 
-// --------------------------------------------------
 // Display all doctors
-// --------------------------------------------------
-
 void DoctorManager::displayAllDoctors() const
 {
     if (head == NULL)
@@ -317,17 +280,14 @@ void DoctorManager::displayAllDoctors() const
         cout << "\nDepartment: " << current->department;
         cout << "\nSpecialization: " << current->specialization;
         cout << "\nPhone: " << current->phone;
-        cout << "\nAvailability: " << current->availability;
+        cout << "\nManual Availability: " << current->availability;
         cout << "\n----------------------------------\n";
 
         current = current->next;
     }
 }
 
-// --------------------------------------------------
 // Display doctors by department
-// --------------------------------------------------
-
 void DoctorManager::displayDoctorsByDepartment(
     const string& department) const
 {
@@ -356,19 +316,53 @@ void DoctorManager::displayDoctorsByDepartment(
         cout << "\nNo doctors found in this department.\n";
 }
 
-// --------------------------------------------------
 // Get doctor count
-// --------------------------------------------------
-
 int DoctorManager::getDoctorCount() const
 {
     return doctorCount;
 }
 
-// --------------------------------------------------
-// Save doctors to file
-// --------------------------------------------------
+// Get effective availability
+string DoctorManager::getEffectiveAvailability(
+    const string& doctorID,
+    int activePatientCount) const
+{
+    Doctor* doctor = searchByID(doctorID);
 
+    if (doctor == NULL)
+        return "Doctor Not Found";
+
+    // Preserve manually assigned statuses
+    if (doctor->availability != "Available")
+        return doctor->availability;
+
+    // Automatic capacity check
+    if (activePatientCount >= MAX_PATIENTS_PER_DOCTOR)
+        return "Unavailable";
+
+    return "Available";
+}
+
+// Check whether doctor can accept another patient
+bool DoctorManager::canAcceptPatient(
+    const string& doctorID,
+    int activePatientCount) const
+{
+    Doctor* doctor = searchByID(doctorID);
+
+    if (doctor == NULL)
+        return false;
+
+    if (doctor->availability != "Available")
+        return false;
+
+    if (activePatientCount >= MAX_PATIENTS_PER_DOCTOR)
+        return false;
+
+    return true;
+}
+
+// Save doctors
 bool DoctorManager::saveDoctors() const
 {
     ofstream file("DATA/doctors.txt");
@@ -394,15 +388,11 @@ bool DoctorManager::saveDoctors() const
     return file.good();
 }
 
-// --------------------------------------------------
-// Load doctors from file
-// --------------------------------------------------
-
+// Load doctors
 bool DoctorManager::loadDoctors()
 {
     ifstream file("DATA/doctors.txt");
 
-    // File may not exist on first run
     if (!file.is_open())
         return true;
 
@@ -422,9 +412,7 @@ bool DoctorManager::loadDoctors()
             fields[3].empty() ||
             fields[4].empty() ||
             fields[5].empty())
-        {
             continue;
-        }
 
         bool duplicate = false;
         Doctor* current = head;

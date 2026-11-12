@@ -97,6 +97,7 @@ void runAdmin(
 void runReceptionist(
     Receptionist& receptionist,
     PatientManager& patientManager,
+    DoctorManager& doctorManager,
     AppointmentManager& appointmentManager,
     EmergencyManager& emergencyManager,
     BedManager& bedManager
@@ -114,7 +115,10 @@ void runReceptionist(
         switch (choice)
         {
             case 1:
-                receptionist.registerNewPatient(patientManager);
+                receptionist.registerNewPatient(
+    patientManager,
+    doctorManager
+);
                 break;
 
             case 2:
@@ -298,25 +302,19 @@ void runNurse(
             case 2:
                 cout << "Enter Patient ID: ";
                 cin >> patientID;
-                nursePortal.viewPatientDetails(
-                    patientManager, patientID
-                );
+                nursePortal.viewPatientDetails(patientManager, patientID);
                 break;
 
             case 3:
                 cout << "Enter Patient ID: ";
                 cin >> patientID;
-                nursePortal.recordVitals(
-                    patientManager, patientID
-                );
+                nursePortal.recordVitals(patientManager, patientID);
                 break;
 
             case 4:
                 cout << "Enter Patient ID: ";
                 cin >> patientID;
-                nursePortal.viewMedicalInstructions(
-                    patientManager, patientID
-                );
+                nursePortal.viewMedicalInstructions(patientManager, patientID);
                 break;
 
             case 5:
@@ -346,12 +344,18 @@ void runNurse(
             case 8:
                 cout << "Enter Assignment ID: ";
                 cin >> assignmentID;
-                nursePortal.returnEquipment(
-                    resourceManager, assignmentID
-                );
+                nursePortal.returnEquipment(resourceManager, assignmentID);
                 break;
 
             case 9:
+                cout << "Enter Patient ID to discharge: ";
+                cin >> patientID;
+                nursePortal.dischargePatient(
+                    patientManager, bedManager, patientID
+                );
+                break;
+
+            case 10:
                 nursePortal.logout();
                 cout << "\nNurse logged out.\n";
                 break;
@@ -360,8 +364,10 @@ void runNurse(
                 cout << "\nInvalid choice.\n";
         }
 
-    } while (choice != 9);
+    } while (choice != 10);
 }
+
+
 
 // PATIENT PORTAL
 void runPatientPortal(
@@ -743,10 +749,13 @@ int main()
                     );
 
                     runReceptionist(
-                        receptionist, patientManager,
-                        appointmentManager, emergencyManager,
-                        bedManager
-                    );
+                           receptionist,
+                           patientManager,
+                            doctorManager,
+                          appointmentManager,
+                         emergencyManager,
+                         bedManager
+);
 
                     auditManager.addLog(
                         loggedInAccount.id,

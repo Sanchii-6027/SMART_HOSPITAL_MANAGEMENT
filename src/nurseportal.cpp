@@ -1,4 +1,3 @@
-
 #include "../include/nurseportal.h"
 
 // Constructor
@@ -77,7 +76,8 @@ void NursePortal::displayDashboard() const
     cout << "6. Release Bed\n";
     cout << "7. Assign Equipment\n";
     cout << "8. Return Equipment\n";
-    cout << "9. Logout\n";
+    cout << "9. Discharge Patient\n";
+    cout << "10. Logout\n";
 
     cout << "=====================================\n";
 }
@@ -94,12 +94,11 @@ void NursePortal::viewAssignedPatients(
     }
 
     cout << "\n========== ASSIGNED PATIENTS ==========\n";
-
     cout << "Nurse ID: " << loggedInNurseID << endl;
     cout << "Assigned Doctor ID: " << assignedDoctorID << endl;
 
-    cout << "\nDoctor-wise patient listing will be connected "
-         << "through PatientManager during integration.\n";
+    cout << "\nThe assigned-patient listing will be completed "
+         << "when the PatientManager listing interface is integrated.\n";
 }
 
 // View Patient Details
@@ -150,6 +149,12 @@ void NursePortal::recordVitals(
     if (!hasPatientAccess(patient))
     {
         cout << "\nAccess denied or patient not found.\n";
+        return;
+    }
+
+    if (patient->status == "Discharged")
+    {
+        cout << "\nCannot record vitals for a discharged patient.\n";
         return;
     }
 
@@ -223,9 +228,7 @@ void NursePortal::recordVitals(
     }
 
     if (record.abnormalFlags.empty())
-    {
         record.abnormalFlags = "No basic alerts";
-    }
 
     cout << "\nCalculated BMI: " << record.BMI << endl;
     cout << "Reading Alerts: " << record.abnormalFlags << endl;
@@ -233,13 +236,9 @@ void NursePortal::recordVitals(
     patient->addVitalRecord(record);
 
     if (patientManager.saveAllData())
-    {
         cout << "\nVital record saved successfully.\n";
-    }
     else
-    {
         cout << "\nWarning: Unable to save vital record.\n";
-    }
 }
 
 // View Medical Instructions
@@ -263,7 +262,6 @@ void NursePortal::viewMedicalInstructions(
     }
 
     cout << "\n========== DOCTOR'S MEDICAL INSTRUCTIONS ==========\n";
-
     patient->displayMedicalHistory();
 }
 
@@ -285,6 +283,12 @@ void NursePortal::assignPatientBed(
     if (!hasPatientAccess(patient))
     {
         cout << "\nAccess denied or patient not found.\n";
+        return;
+    }
+
+    if (patient->status == "Discharged")
+    {
+        cout << "\nCannot assign a bed to a discharged patient.\n";
         return;
     }
 
@@ -317,8 +321,16 @@ void NursePortal::assignPatientBed(
 
     Bed* bed = bedManager.searchBed(bedID);
 
+    if (bed == NULL)
+    {
+        bedManager.releaseBed(bedID);
+        cout << "\nBed record not found.\n";
+        return;
+    }
+
     patient->isAdmitted = true;
     patient->admissionDate = admissionDate;
+    patient->dischargeDate = "";
     patient->roomID = bed->roomID;
     patient->bedID = bedID;
     patient->status = "Admitted";
@@ -331,12 +343,19 @@ void NursePortal::assignPatientBed(
     }
     else
     {
-        cout << "\nWarning: Patient admission details could not be saved.\n";
-        cout << "Please verify the bed and patient records.\n";
+        patient->isAdmitted = false;
+        patient->admissionDate = "";
+        patient->roomID = "";
+        patient->bedID = "";
+        patient->status = "Admission Recommended";
+
+        bedManager.releaseBed(bedID);
+
+        cout << "\nUnable to save admission details. Changes rolled back.\n";
     }
 }
 
-// Release Bed
+// Release Bed without discharging patient
 void NursePortal::releasePatientBed(
     PatientManager& patientManager,
     BedManager& bedManager,
@@ -363,17 +382,77 @@ void NursePortal::releasePatientBed(
         return;
     }
 
+    cout << "\nPlease use the Discharge Patient option to discharge "
+         << "a patient and release their bed together.\n";
+}
+
+// Discharge admitted or outpatient patient
+void NursePortal::dischargePatient(
+    PatientManager& patientManager,
+    BedManager& bedManager,
+    const string& patientID
+) const
+{
+    if (!isLoggedIn())
+    {
+        cout << "\nPlease login first.\n";
+        return;
+    }
+
+    Patient* patient = patientManager.searchByID(patientID);
+
+    if (!hasPatientAccess(patient))
+    {
+        cout << "\nAccess denied or patient not found.\n";
+        return;
+    }
+
+    if (patient->status == "Discharged" ||
+        !patient->dischargeDate.empty())
+    {
+        cout << "\nPatient has already been discharged.\n";
+        return;
+    }
+
     string dischargeDate;
+
+    cout << "\n========== PATIENT DISCHARGE ==========\n";
+    cout << "Patient ID: " << patient->patientID << endl;
+    cout << "Patient Name: " << patient->name << endl;
+    cout << "Doctor ID: " << patient->doctorID << endl;
+
+    if (patient->isAdmitted)
+        cout << "Assigned Bed: " << patient->bedID << endl;
+    else
+        cout << "Admission Status: Outpatient\n";
 
     cout << "\nEnter Discharge Date (YYYY-MM-DD): ";
     cin >> dischargeDate;
 
-    if (!bedManager.releaseBed(patient->bedID))
+    if (dischargeDate.empty())
     {
-        cout << "\nUnable to release bed.\n";
+        cout << "\nInvalid discharge date.\n";
         return;
     }
 
+    string oldStatus = patient->status;
+    string oldDischargeDate = patient->dischargeDate;
+    string oldRoomID = patient->roomID;
+    string oldBedID = patient->bedID;
+    bool oldAdmissionStatus = patient->isAdmitted;
+
+    // Release the bed if the patient was admitted
+    if (oldAdmissionStatus)
+    {
+        if (oldBedID.empty() ||
+            !bedManager.releaseBed(oldBedID))
+        {
+            cout << "\nUnable to release the patient's bed.\n";
+            return;
+        }
+    }
+
+    // Update patient discharge information
     patient->isAdmitted = false;
     patient->dischargeDate = dischargeDate;
     patient->roomID = "";
@@ -382,12 +461,27 @@ void NursePortal::releasePatientBed(
 
     if (patientManager.saveAllData())
     {
-        cout << "\nBed released successfully.\n";
-        cout << "Patient discharge details saved.\n";
+        cout << "\nPatient discharged successfully!\n";
+        cout << "Discharge Date: " << dischargeDate << endl;
+
+        if (oldAdmissionStatus)
+            cout << "Assigned bed has been released.\n";
+
+        cout << "The doctor's active patient count will now decrease.\n";
     }
     else
     {
-        cout << "\nWarning: Patient discharge details could not be saved.\n";
+        // Restore patient data if saving failed
+        patient->isAdmitted = oldAdmissionStatus;
+        patient->dischargeDate = oldDischargeDate;
+        patient->roomID = oldRoomID;
+        patient->bedID = oldBedID;
+        patient->status = oldStatus;
+
+        if (oldAdmissionStatus)
+            bedManager.assignBed(oldBedID, patientID);
+
+        cout << "\nDischarge could not be saved. Changes rolled back.\n";
     }
 }
 
@@ -412,6 +506,12 @@ void NursePortal::assignEquipment(
         return;
     }
 
+    if (patient->status == "Discharged")
+    {
+        cout << "\nCannot assign equipment to a discharged patient.\n";
+        return;
+    }
+
     ResourceAssignment assignment;
 
     assignment.patientID = patientID;
@@ -432,9 +532,7 @@ void NursePortal::assignEquipment(
     }
 
     if (resourceManager.assignResource(assignment))
-    {
         cout << "\nEquipment assigned successfully.\n";
-    }
     else
     {
         cout << "\nUnable to assign equipment.\n";
@@ -455,11 +553,7 @@ void NursePortal::returnEquipment(
     }
 
     if (resourceManager.returnResource(assignmentID))
-    {
         cout << "\nEquipment returned successfully.\n";
-    }
     else
-    {
         cout << "\nUnable to return equipment.\n";
-    }
 }

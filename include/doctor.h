@@ -6,6 +6,8 @@
 
 using namespace std;
 
+const int MAX_PATIENTS_PER_DOCTOR = 5;
+
 struct Doctor
 {
     string doctorID;
@@ -14,6 +16,8 @@ struct Doctor
     string department;
     string specialization;
     string phone;
+
+    // Manually controlled availability
     string availability;
 
     Doctor* next;
@@ -24,8 +28,10 @@ struct Doctor
 class DoctorManager
 {
 private:
+
     Doctor* head;
     Doctor* tail;
+
     int doctorCount;
     int nextDoctorNumber;
 
@@ -38,6 +44,7 @@ private:
     string generateDoctorID();
 
 public:
+
     DoctorManager();
     ~DoctorManager();
 
@@ -54,6 +61,17 @@ public:
     void displayDoctorsByDepartment(const string& department) const;
 
     int getDoctorCount() const;
+
+    // Doctor capacity and availability
+    string getEffectiveAvailability(
+        const string& doctorID,
+        int activePatientCount
+    ) const;
+
+    bool canAcceptPatient(
+        const string& doctorID,
+        int activePatientCount
+    ) const;
 };
 
 #endif

@@ -1012,3 +1012,49 @@ void PatientManager::displaySearchStructures() const
 
     cout << "\nTotal patients: " << patientCount << '\n';
 }
+// --------------------------------------------------
+// Count active patients assigned to a doctor
+// --------------------------------------------------
+
+int PatientManager::countActivePatientsForDoctor(
+    const string& doctorID
+) const
+{
+    if (doctorID.empty())
+        return 0;
+
+    int activeCount = 0;
+
+    PatientNode* current = head;
+
+    while (current != NULL)
+    {
+        Patient* patient = current->data;
+
+        if (patient != NULL &&
+            patient->doctorID == doctorID &&
+            patient->dischargeDate.empty() &&
+            patient->status != "Discharged")
+        {
+            activeCount++;
+        }
+
+        current = current->next;
+    }
+
+    return activeCount;
+}
+
+// --------------------------------------------------
+// Check whether a doctor has reached maximum capacity
+// --------------------------------------------------
+
+bool PatientManager::isDoctorAtCapacity(
+    const string& doctorID
+) const
+{
+    const int MAX_PATIENTS_PER_DOCTOR = 5;
+
+    return countActivePatientsForDoctor(doctorID)
+           >= MAX_PATIENTS_PER_DOCTOR;
+}

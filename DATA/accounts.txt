@@ -2,3 +2,7 @@ ADMIN001|Hospital admin|admin|admin123|Admin|Administration
 DOC00001|Dr. Rahul Sharma|rahul01|Rahul@123|Doctor|Cardiology
 NUR00001|Priya Sharma|priya@123|priya01|Nurse|Cardiology
 DOC00002|Dr. Arjun Mehta |arjun01|Arjun@123|Doctor|Neurology
+DOC00003|Dr. Rohan Verma|rohan01|Rohan@123|Doctor|Pulmonology
+DOC00004|Dr. Ananya Gupta|ananya01|Ananya@123|Doctor|Pediatrics
+DOC00005|Dr. Aditi Rao|aditi01|Aditi@123|Doctor|Dermatology
+DOC00006|Dr Aman Bansal|aman01|Aman@123|Doctor|General Medicine

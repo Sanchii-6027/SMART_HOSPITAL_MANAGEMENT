@@ -65,7 +65,6 @@ public:
     PatientManager();
     ~PatientManager();
 
-    // Prevent accidental copying of the manager
     PatientManager(const PatientManager& other) = delete;
     PatientManager& operator=(const PatientManager& other) = delete;
 
@@ -91,6 +90,15 @@ public:
     // Patient statistics
     int getPatientCount() const;
     bool isEmpty() const;
+
+    // Doctor patient capacity management
+    int countActivePatientsForDoctor(
+        const string& doctorID
+    ) const;
+
+    bool isDoctorAtCapacity(
+        const string& doctorID
+    ) const;
 
     // File operations
     bool saveAllData() const;
